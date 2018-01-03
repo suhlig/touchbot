@@ -13,6 +13,10 @@ func atMentioned(message string, userID string) bool {
 	return strings.Contains(message, prefix)
 }
 
+func isDM(channel string) bool {
+	return strings.HasPrefix(channel, "D")
+}
+
 func main() {
 	token := os.Getenv("SLACK_TOKEN")
 
@@ -41,16 +45,15 @@ func main() {
 				} else {
 					fmt.Printf("Message from %v in #%v: %v\n", userInfo.Name, ev.Channel, ev.Text)
 
-					if strings.HasPrefix(ev.Channel, "D") {
-						fmt.Printf("DM from %s\n", userInfo.Name)
+					if isDM(ev.Channel) {
 						rtm.SendMessage(rtm.NewOutgoingMessage("What's up?", ev.Channel))
-					}
+					} else {
+						info := rtm.GetInfo()
 
-					info := rtm.GetInfo()
-
-					if ev.User != info.User.ID && atMentioned(ev.Text, info.User.ID) {
-						msg := fmt.Sprintf("What's up, <@%s>?", ev.User)
-						rtm.SendMessage(rtm.NewOutgoingMessage(msg, ev.Channel))
+						if ev.User != info.User.ID && atMentioned(ev.Text, info.User.ID) {
+							msg := fmt.Sprintf("What's up, <@%s>?", ev.User)
+							rtm.SendMessage(rtm.NewOutgoingMessage(msg, ev.Channel))
+						}
 					}
 				}
 
